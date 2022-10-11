@@ -3,9 +3,11 @@ package users
 import (
 	"bookstore/domain/users"
 	"bookstore/services"
-	"net/http"
 	
-	"bookstore/utils"
+	"net/http"
+
+	"bookstore/utils/errors"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -25,24 +27,21 @@ func CreateUser(c *gin.Context) {
 	var user users.User
 
 	if err := c.ShouldBindJSON(&user); err != nil {
-		restErr := errors.RestErr{
-			Message: "invaild json body",
-			Status:  http.StatusBadRequest,
-			Error:   "bad request",
-		}
+		restErr := errors.NewBadRequestError("invaild json body")
+		
 		c.JSON(restErr.Status, restErr)
 		return
 	}
 
 	result, saveErr := services.CreateUser(user)
-	if saveErr != nil {
 		//ToDo: handle user creation error
+	if saveErr != nil {
+		c.JSON(saveErr.Status, saveErr)
 		return
 	}
-
 	c.JSON(http.StatusCreated, result)
 }
-
+		
 func GetUser(c *gin.Context) {
 	c.String(http.StatusNotImplemented, "implement me!")
 }
