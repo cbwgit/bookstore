@@ -1,14 +1,52 @@
-package controllers
+package users
 
+import (
+	"bookstore/domain/users"
+	"bookstore/services"
+	"net/http"
+	
+	"bookstore/utils"
+	"github.com/gin-gonic/gin"
+)
 
-func CreateUser(){
-
+type IndexData struct {
+	Title   string
+	Content string
 }
 
-func GetUser(){
-
+func Test(c *gin.Context) {
+	data := new(IndexData)
+	data.Title = "首頁"
+	data.Content = "我的第一個首頁"
+	c.HTML(http.StatusOK, "index.html", data)
 }
 
-func FindUser(){
+func CreateUser(c *gin.Context) {
+	var user users.User
 
+	if err := c.ShouldBindJSON(&user); err != nil {
+		restErr := errors.RestErr{
+			Message: "invaild json body",
+			Status:  http.StatusBadRequest,
+			Error:   "bad request",
+		}
+		c.JSON(restErr.Status, restErr)
+		return
+	}
+
+	result, saveErr := services.CreateUser(user)
+	if saveErr != nil {
+		//ToDo: handle user creation error
+		return
+	}
+
+	c.JSON(http.StatusCreated, result)
+}
+
+func GetUser(c *gin.Context) {
+	c.String(http.StatusNotImplemented, "implement me!")
+}
+
+func SearchUser(c *gin.Context) {
+	c.String(http.StatusNotImplemented, "implement me!")
 }
