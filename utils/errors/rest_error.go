@@ -13,5 +13,6 @@ func NewBadRequestError(message string) *RestErr {
 		Message: message,
 		Status:  http.StatusBadRequest,
 		Error:   "bad request",
+		
 	}
 }
