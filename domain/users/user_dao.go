@@ -19,6 +19,7 @@ func (user *User) Get() *errors.RestErr {
 	user.LastName = result.LastName
 	user.Email = result.Email
 	user.DateCreated = result.DateCreated
+	
 	return nil
 }
 

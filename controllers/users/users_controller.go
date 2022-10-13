@@ -3,7 +3,8 @@ package users
 import (
 	"bookstore/domain/users"
 	"bookstore/services"
-	
+	"strconv"
+
 	"net/http"
 
 	"bookstore/utils/errors"
@@ -33,16 +34,28 @@ func CreateUser(c *gin.Context) {
 	}
 
 	result, saveErr := services.CreateUser(user)
-		//ToDo: handle user creation error
+	//ToDo: handle user creation error
 	if saveErr != nil {
 		c.JSON(saveErr.Status, saveErr)
 		return
 	}
 	c.JSON(http.StatusCreated, result)
 }
-		
+
 func GetUser(c *gin.Context) {
-	c.String(http.StatusNotImplemented, "implement me!")
+	userId, userErr := strconv.ParseInt(c.Param("user_id"), 10, 64)
+	if userErr != nil {
+		err := errors.NewBadRequestError("should be a number")
+		c.JSON(err.Status, err)
+		return
+	}
+	user, getErr := services.GetUser(userId)
+	//ToDo: handle user creation error
+	if getErr != nil {
+		c.JSON(getErr.Status, getErr)
+		return
+	}
+	c.JSON(http.StatusOK, user)
 }
 
 func SearchUser(c *gin.Context) {
