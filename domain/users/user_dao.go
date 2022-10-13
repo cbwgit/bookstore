@@ -3,6 +3,7 @@ package users
 import (
 	"bookstore/utils/errors"
 	"fmt"
+	"time"
 )
 
 var (
@@ -19,7 +20,7 @@ func (user *User) Get() *errors.RestErr {
 	user.LastName = result.LastName
 	user.Email = result.Email
 	user.DateCreated = result.DateCreated
-	
+
 	return nil
 }
 
@@ -32,6 +33,10 @@ func (user *User) Save() *errors.RestErr {
 		return errors.NewBadRequestError(fmt.Sprintf("user %d already exists", user.Id))
 
 	}
-	usersDB[user.Id]=user
+
+	now := time.Now().UTC()
+	user.DateCreated = now.Format("1995-10-27T14:20:23Z")
+
+	usersDB[user.Id] = user
 	return nil
 }
