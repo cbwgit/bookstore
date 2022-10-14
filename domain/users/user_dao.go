@@ -1,11 +1,13 @@
 package users
 
 import (
-	"bookstore/utils/date_utils"
+	"bookstore/datasources/mysql/users_db"
 	"bookstore/utils/errors"
 	"fmt"
-	"bookstore/datasources/mysql/users_db"
+)
 
+const (
+	queryInsertUser = "INSERT INTO users(first_name, last_name, email, date_created) VALUES(?, ?, ?, ?);"
 )
 
 var (
@@ -27,19 +29,25 @@ func (user *User) Get() *errors.RestErr {
 }
 
 func (user *User) Save() *errors.RestErr {
-	if err := users_db.Client.Ping(); err != nil { //database connection fail 
-		panic(err)
+	stmt, err := users_db.Client.Prepare(queryInsertUser)
+	if err != nil {
+		return errors.NewInternalServerError(err.Error())
 	}
-	current := usersDB[user.Id]
-	if current != nil {
-		if current.Email == user.Email {
-			return errors.NewBadRequestError(fmt.Sprintf("email %s already register", user.Email))
-		}
-		return errors.NewBadRequestError(fmt.Sprintf("user %d already exists", user.Id))
+	defer stmt.Close()
 
+	//result, err:= users_db.Client.Exec(queryInsertUser, user.LastName, user.Email, user.DateCreated)
+
+	insertResult, err := stmt.Exec(user.FirstName, user.LastName, user.Email, user.DateCreated)
+	if err != nil {
+		return errors.NewInternalServerError(
+			fmt.Sprintf("error when trying to save user: ", err.Error()))
 	}
-	user.DateCreated = date_utils.GetNowString()
 
-	usersDB[user.Id] = user
+	userId, err := insertResult.LastInsertId()
+	if err != nil {
+		return errors.NewInternalServerError(
+			fmt.Sprintf("Error when trying to get last insert ID: %s", err.Error()))
+	}
+	user.Id = userId
 	return nil
 }
