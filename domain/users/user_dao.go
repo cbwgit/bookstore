@@ -2,12 +2,15 @@ package users
 
 import (
 	"bookstore/datasources/mysql/users_db"
+	"bookstore/utils/date_utils"
 	"bookstore/utils/errors"
 	"fmt"
+	"strings"
 )
 
 const (
-	queryInsertUser = "INSERT INTO users(first_name, last_name, email, date_created) VALUES(?, ?, ?, ?);"
+	indexUniqueEmail = "email_UNIQUE"
+	queryInsertUser  = "INSERT INTO users(first_name, last_name, email, date_created) VALUES(?, ?, ?, ?);"
 )
 
 var (
@@ -35,10 +38,15 @@ func (user *User) Save() *errors.RestErr {
 	}
 	defer stmt.Close()
 
+	user.DateCreated = date_utils.GetNowString()
 	//result, err:= users_db.Client.Exec(queryInsertUser, user.LastName, user.Email, user.DateCreated)
 
 	insertResult, err := stmt.Exec(user.FirstName, user.LastName, user.Email, user.DateCreated)
 	if err != nil {
+		if strings.Contains(err.Error(), indexUniqueEmail) {
+			return errors.NewInternalServerError(
+				fmt.Sprintf("Email %s already exists!", user.Email))
+		}
 		return errors.NewInternalServerError(
 			fmt.Sprintf("error when trying to save user: ", err.Error()))
 	}
