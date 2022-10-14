@@ -4,6 +4,8 @@ import (
 	"bookstore/utils/date_utils"
 	"bookstore/utils/errors"
 	"fmt"
+	"bookstore/datasources/mysql/users_db"
+
 )
 
 var (
@@ -25,6 +27,9 @@ func (user *User) Get() *errors.RestErr {
 }
 
 func (user *User) Save() *errors.RestErr {
+	if err := users_db.Client.Ping(); err != nil { //database connection fail 
+		panic(err)
+	}
 	current := usersDB[user.Id]
 	if current != nil {
 		if current.Email == user.Email {
