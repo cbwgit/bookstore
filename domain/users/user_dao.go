@@ -6,6 +6,8 @@ import (
 	"bookstore/utils/errors"
 	"fmt"
 	"strings"
+
+	"github.com/go-sql-driver/mysql"
 )
 
 const (
@@ -23,7 +25,16 @@ func (user *User) Get() *errors.RestErr {
 	defer stmt.Close()
 
 	result := stmt.QueryRow(user.Id)
-	if err := result.Scan(&user.Id, &user.FirstName, &user.LastName, &user.Email, &user.DateCreated); err != nil {
+
+	if getErr := result.Scan(&user.Id, &user.FirstName, &user.LastName, &user.Email, &user.DateCreated); err != nil {
+		sqlErr, ok := getErr.(*mysql.MySQLError)
+		if !ok {
+				
+			return errors.NewInternalServerError(fmt.Sprintf("error parsing database response %s",getErr.Error()))
+		}
+		fmt.Println(sqlErr.Number)
+		fmt.Println(sqlErr.Message)
+
 		if strings.Contains(err.Error(), errorNoRows) {
 			return errors.NewNotFoundError(
 				fmt.Sprint("user not exist", user.Id))
@@ -44,7 +55,20 @@ func (user *User) Save() *errors.RestErr {
 	user.DateCreated = date_utils.GetNowString()
 	//result, err:= users_db.Client.Exec(queryInsertUser, user.LastName, user.Email, user.DateCreated)
 
-	insertResult, err := stmt.Exec(user.FirstName, user.LastName, user.Email, user.DateCreated)
+	insertResult, saveErr  := stmt.Exec(user.FirstName, user.LastName, user.Email, user.DateCreated)
+	if saveErr != nil{
+		sqlErr, ok := saveErr.(*mysql.MySQLError)
+		if !ok {
+				
+			return errors.NewInternalServerError(fmt.Sprintf("error parsing database response %s",saveErr.Error()))
+		}
+	
+		switch sqlErr.Number {
+		case 1062:
+			return errors.NewBadRequestError(fmt.Sprintf("invalid data",user.Email))
+		}
+		return errors.NewInternalServerError(fmt.Sprintf("error processing request",saveErr.Error()))
+	}
 	if err != nil {
 		if strings.Contains(err.Error(), indexUniqueEmail) {
 			return errors.NewInternalServerError(
