@@ -2,8 +2,9 @@ package services
 
 import (
 	"bookstore/domain/users"
-	"bookstore/utils/errors"
+	"bookstore/utils/crypto_utils"
 	"bookstore/utils/date_utils"
+	"bookstore/utils/errors"
 )
 
 func GetUser(userId int64) (*users.User, *errors.RestErr){
@@ -21,6 +22,7 @@ func CreateUser(user users.User) (*users.User, *errors.RestErr) {
 	}
 	user.Status = users.StatusActive
 	user.DateCreated = date_utils.GetNowDBFormat()
+	user.Password =crypto_utils.GetMd5(user.Password)
 	if err := user.Save(); err!= nil {
 		return nil, err
 	}
