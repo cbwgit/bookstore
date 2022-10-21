@@ -31,7 +31,6 @@ func getUserId(userIdParam string) (int64, *errors.RestErr) {
 	}
 	return userId, nil
 }
-
 func Create(c *gin.Context) {
 	var user users.User
 	if err := c.ShouldBindJSON(&user); err != nil {
@@ -64,20 +63,17 @@ func Get(c *gin.Context) {
 }
 
 func Update(c *gin.Context) {
-
 	userId, idErr := getUserId(c.Param("user_id"))
 	if idErr != nil {
 		c.JSON(idErr.Status, idErr)
 		return
 	}
-
 	var user users.User
 	if err := c.ShouldBindJSON(&user); err != nil {
 		restErr := errors.NewBadRequestError("invalid json body")
 		c.JSON(restErr.Status, restErr)
 		return
 	}
-
 	user.Id = userId
 
 	isPartial := c.Request.Method == http.MethodPatch
@@ -96,13 +92,13 @@ func Delete(c *gin.Context) {
 		c.JSON(idErr.Status, idErr)
 		return
 	}
+
 	if err := services.UsersService.DeleteUser(userId); err != nil {
 		c.JSON(err.Status, err)
 		return
 	}
 	c.JSON(http.StatusOK, map[string]string{"status": "deleted"})
 }
-
 func Search(c *gin.Context) {
 	status := c.Query("status")
 

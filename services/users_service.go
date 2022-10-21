@@ -7,8 +7,9 @@ import (
 	"bookstore/utils/errors"
 )
 
-
-
+var (
+	UsersService usersServiceInterface = &usersService{}
+)
 
 type usersService struct{}
 
@@ -20,17 +21,13 @@ type usersServiceInterface interface {
 	SearchUser(string) (users.Users, *errors.RestErr)
 }
 
-
-
-
-func (s *usersService) GetUser(userId int64) (*users.User, *errors.RestErr){
-	dao:= &users.User{Id: userId}
+func (s *usersService) GetUser(userId int64) (*users.User, *errors.RestErr) {
+	dao := &users.User{Id: userId}
 	if err := dao.Get(); err != nil {
 		return nil, err
 	}
 	return dao, nil
 }
-
 
 func (s *usersService) CreateUser(user users.User) (*users.User, *errors.RestErr) {
 	if err := user.Validate(); err != nil {
@@ -38,8 +35,8 @@ func (s *usersService) CreateUser(user users.User) (*users.User, *errors.RestErr
 	}
 	user.Status = users.StatusActive
 	user.DateCreated = date_utils.GetNowDBFormat()
-	user.Password =crypto_utils.GetMd5(user.Password)
-	if err := user.Save(); err!= nil {
+	user.Password = crypto_utils.GetMd5(user.Password)
+	if err := user.Save(); err != nil {
 		return nil, err
 	}
 	return &user, nil
@@ -73,7 +70,7 @@ func (s *usersService) UpdateUser(isPartial bool, user users.User) (*users.User,
 	}
 	return current, nil
 
-} 
+}
 
 func (s *usersService) DeleteUser(userId int64) *errors.RestErr {
 	dao := &users.User{Id: userId}
